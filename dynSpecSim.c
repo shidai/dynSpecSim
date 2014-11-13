@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "dynSpecSim.h"
+#include "T2toolkit.h"
 
 int main (int argc, char *argv[])
 {
@@ -64,28 +65,20 @@ int main (int argc, char *argv[])
 	}
 	*/
 
-	int i;
-	int ns = 4;
-	int nf = 7;
-	double s[4], f[7];
+	double step = atof(argv[1]);  // sampling
+	int ns = (int)((3+step)/step);
+	int nf = (int)((6+step)/step);
 	acfStruct acfStructure;
-
-	for (i = 0; i < ns; i++)
-	{
-		s[i] = i;
-	}
-
-	for (i = 0; i < nf; i++)
-	{
-		f[i] = i;
-	}
 
 	acfStructure.ns = ns;
 	acfStructure.nf = nf;
-	acfStructure.s = s;
-	acfStructure.f = f;
+	allocateMemory (&acfStructure);
 
-	calACF (&acfStructure);
+	calACF (&acfStructure, step);
+	power (&acfStructure);
+	simDynSpec (&acfStructure);
+
+	deallocateMemory (&acfStructure);
 
 	return 0;
 }

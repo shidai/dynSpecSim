@@ -1,1 +1,4 @@
 Dynamic spectrum simulator
+
+usage: ./dynSpecSim num
+        num: sampling step

@@ -2,3 +2,5 @@
 *.swp
 dynSpecSim
 *.out
+*.ps
+*.dat
