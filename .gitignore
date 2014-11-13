@@ -3,4 +3,5 @@
 dynSpecSim
 *.out
 *.ps
+*.png
 *.dat
