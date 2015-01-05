@@ -14,23 +14,26 @@ int calACF (acfStruct *acfStructure, double step)
 	int i,j;
 	int ns = acfStructure->ns;
 	int nf = acfStructure->nf;
-	double acf[ns*nf];
+	double *acf;
+	acf = (double *)malloc(sizeof(double)*ns*nf);
 
 	for (i = 0; i < ns; i++)
 	{
 		//acfStructure->s[i] = i*step;
-		acfStructure->s[i] = (i-ns/2)*step;
+		acfStructure->s[i] = -10.0+i*step;
 	}
 
   for (i = 0; i < nf; i++)
 	{
 		//acfStructure->f[i] = i*step;
-		acfStructure->f[i] = (i-nf/2)*step;
+		acfStructure->f[i] = -8.0+i*step;
 	}
 
 	long seed;
 	double rand;
-	seed = TKsetSeed();
+	seed = -1417748812;
+	//seed = TKsetSeed();
+	//printf ("%ld\n",seed);
 	rand = TKgaussDev(&seed);
 	printf ("%lf\n",rand);
 	int n = 0;
@@ -91,21 +94,21 @@ int calACF (acfStruct *acfStructure, double step)
 	{
 		for (j = 0; j < ns; j++)
 		{
-			if (i >= nf/2-1 && j >= ns/2-1)
+			if (i > (int)(nf/2) && j > (int)(ns/2))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i-nf/2+1)+(j-ns/2+1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)(nf/2)-1)+(j-(int)(ns/2)-1)];
 			}
-			else if  (i >= nf/2-1 && j < ns/2-1)
+			else if  (i > (int)(nf/2) && j <= (int)(ns/2))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i-nf/2+1)+(j+ns/2-1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)(nf/2)-1)+(j+(int)(ns/2))];
 			}
-			else if  (i < nf/2-1 && j < ns/2-1)
+			else if  (i <= (int)(nf/2) && j <= (int)(ns/2))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i+nf/2-1)+(j+ns/2-1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)(nf/2))+(j+(int)(ns/2))];
 			}
-			else if  (i < nf/2-1 && j >= ns/2-1)
+			else if  (i <= (int)(nf/2) && j > (int)(ns/2))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i+nf/2-1)+(j-ns/2+1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)(nf/2))+(j-(int)(ns/2)-1)];
 			}
 			n++;
 		}
@@ -116,7 +119,7 @@ int calACF (acfStruct *acfStructure, double step)
 	//{
 	//	for (j = 0; j < ns; j++)
 	//	{
-	//		printf ("%.0lf  ", acfStructure->acf2d[n]);
+	//		printf ("%lf  ", acfStructure->acf2d[n]);
 	//		n++;
 	//	}
 	//	printf ("\n");
@@ -132,6 +135,8 @@ int calACF (acfStruct *acfStructure, double step)
 	//	}
 	//	printf ("\n");
 	//}
+	
+	free(acf);
 
 	return 0;
 }
@@ -197,16 +202,17 @@ int power (acfStruct *acfStructure)
 	}
 
 	fftw_complex *out_t;
-	out_t = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nf*(ns/2+1));
+	out_t = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nf*((int)(ns/2)+1));
 	//out_t = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (2*nf-2)*ns);
 	dft2d (&acfTest, out_t);
 
 	deallocateMemory (&acfTest);
+	//printf ("finish intializing fft...\n");
 	//////////////////////////////////////////////////////////////////////////////
 
   fftw_complex *out;
 	
-	out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nf*(ns/2+1));
+	out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nf*((int)(ns/2)+1));
 	//out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (2*nf-2)*ns);
 	
 	dft2d (acfStructure, out);
@@ -225,13 +231,15 @@ int power (acfStruct *acfStructure)
 		for (j = 0; j < ns; j++)
 		//for (j = 0; j < 2*ns-2; j++)
 		{
-			if (j < ns/2+1)
+			if (j < (int)(ns/2)+1)
 			{
-				acfStructure->psrt[n] = sqrt(fabs(out[i*(ns/2+1)+j][0]));
+				acfStructure->psrt[n] = sqrt(sqrt(pow(out[i*((int)(ns/2)+1)+j][0],2.0)+pow(out[i*((int)(ns/2)+1)+j][1],2.0)));
+				//acfStructure->psrt[n] = sqrt(fabs(out[i*((int)(ns/2)+1)+j][0]));
 			}
 			else
 			{
-				acfStructure->psrt[n] = sqrt(fabs(out[i*(ns/2+1)+ns-j][0]));
+				acfStructure->psrt[n] = sqrt(sqrt(pow(out[i*((int)(ns/2)+1)+ns-j][0],2.0)+pow(out[i*((int)(ns/2)+1)+ns-j][1],2.0)));
+				//acfStructure->psrt[n] = sqrt(fabs(out[i*((int)(ns/2)+1)+ns-j][0]));
 			}
 			//printf ("%lf ", acfStructure->psrt[n]);
 			n++;
@@ -273,7 +281,7 @@ void allocateMemory (acfStruct *acfStructure)
 
 void deallocateMemory (acfStruct *acfStructure)
 {
-	int ns = acfStructure->ns;
+	int nf = acfStructure->nf;
 	
 	fftw_free(acfStructure->s); 
 	fftw_free(acfStructure->f); 
@@ -284,7 +292,7 @@ void deallocateMemory (acfStruct *acfStructure)
 
 	//fftw_free(acfStructure->dynSpec); 
 	int i;
-	for (i = 0; i < ns; i++)
+	for (i = 0; i < nf; i++)
 	//for (i = 0; i < 2*ns-2; i++)
 	{
 		free(acfStructure->dynSpec[i]);

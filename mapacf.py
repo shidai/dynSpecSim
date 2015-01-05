@@ -9,23 +9,22 @@ from matplotlib import rc
 rc('text', usetex=True)
 
 # read data
-data = np.loadtxt('test.dat')
+#data = np.loadtxt('test.dat')
+data = np.loadtxt('acf.dat')
 
 plt.figure(figsize=(8,8), dpi=80)
 ax = plt.subplot(111)
 
 (n,m) = data.shape
-n1 = n/2
-m1 = m/2
-print n1,m1
-#print data[300:(300+10),200:(200+10)]
-#ax.set_xlim(300,500)
-#ax.set_ylim(200,400)
-#ax.set_xlim(0,m)
-#ax.set_ylim(0,n)
-ax.pcolor(data[10:(10+n1),20:(20+m1)])
+ax.set_xlim(0,m)
+ax.set_ylim(0,n)
+ax.pcolor(data)
 #ax.pcolor(data, cmap='YlOrBr')
 #plt.minorticks_on()
-plt.savefig("dynSpec.png",dpi=80)
+#plt.savefig("dynSpec.png",dpi=80)
+plt.savefig("acf.png",dpi=80)
 
+#plt.savefig("dynSpec.ps",dpi=80)
+#plt.savefig("acf.ps",dpi=80)
+#plt.savefig("acffftshift.ps",dpi=80)
 plt.show()

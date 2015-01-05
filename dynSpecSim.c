@@ -66,8 +66,8 @@ int main (int argc, char *argv[])
 	*/
 
 	double step = atof(argv[1]);  // sampling
-	int ns = 2*(int)((3+step)/step);
-	int nf = 2*(int)((6+step)/step);
+	int ns = (int)(20/step)+1;
+	int nf = (int)(16/step)+1;
 	acfStruct acfStructure;
 
 	acfStructure.ns = ns;
