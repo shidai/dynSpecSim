@@ -9,30 +9,32 @@
 #include "dynSpecSim.h"
 #include "T2toolkit.h"
 
-int calACF (acfStruct *acfStructure, double step)
+int calACF (acfStruct *acfStructure)
 {
 	int i,j;
 	int ns = acfStructure->ns;
 	int nf = acfStructure->nf;
+	double steps = acfStructure->steps;
+	double stepf = acfStructure->stepf;
 	double *acf;
 	acf = (double *)malloc(sizeof(double)*ns*nf);
 
 	for (i = 0; i < ns; i++)
 	{
 		//acfStructure->s[i] = i*step;
-		acfStructure->s[i] = -10.0+i*step;
+		acfStructure->s[i] = -10.0+i*steps;
 	}
 
   for (i = 0; i < nf; i++)
 	{
 		//acfStructure->f[i] = i*step;
-		acfStructure->f[i] = -8.0+i*step;
+		acfStructure->f[i] = -10.0+i*stepf;
 	}
 
 	long seed;
 	double rand;
-	seed = -1417748812;
-	//seed = TKsetSeed();
+	//seed = -1417748812;
+	seed = TKsetSeed();
 	//printf ("%ld\n",seed);
 	rand = TKgaussDev(&seed);
 	printf ("%lf\n",rand);
@@ -60,6 +62,7 @@ int calACF (acfStruct *acfStructure, double step)
 	//	printf ("\n");
 	//}
 
+	//////////////////////////////////////////////////////////////////
 	//n = 0;
 	//for (i = 0; i < (2*nf-2); i++)
 	//{
@@ -88,6 +91,7 @@ int calACF (acfStruct *acfStructure, double step)
 	//		n++;
 	//	}
 	//}
+	//////////////////////////////////////////////////////////////////
 
 	n = 0;
 	for (i = 0; i < nf; i++)
@@ -125,6 +129,7 @@ int calACF (acfStruct *acfStructure, double step)
 	//	printf ("\n");
 	//}
 
+	//////////////////////////////////////////////////////////////////
 	//n = 0;
 	//for (i = 0; i < (2*nf-2); i++)
 	//{
@@ -135,6 +140,7 @@ int calACF (acfStruct *acfStructure, double step)
 	//	}
 	//	printf ("\n");
 	//}
+	//////////////////////////////////////////////////////////////////
 	
 	free(acf);
 
@@ -186,14 +192,20 @@ int power (acfStruct *acfStructure)
 	int i;
 	int nf = acfStructure->nf;
 	int ns = acfStructure->ns;
-	
 	/////////////////////////////////////////////////////////////////////////////////
 	//printf ("intializing fft...\n");
 	acfStruct acfTest; // initialize the system, don't know why....
-	acfTest.ns = acfStructure->ns;
-	acfTest.nf = acfStructure->nf;
+	
+	acfTest.bw = acfStructure->bw;
+	acfTest.f0 = acfStructure->f0;
+	acfTest.tint = acfStructure->tint;
+	acfTest.t0 = acfStructure->t0;
+
+	acfTest.nchn = acfStructure->nchn;
+	acfTest.nsubint = acfStructure->nsubint;
 
 	allocateMemory (&acfTest);
+
 	for (i = 0; i < nf*ns; i++)
 	//for (i = 0; i < (2*nf-2)*(2*ns-2); i++)
 	{
@@ -255,8 +267,30 @@ int power (acfStruct *acfStructure)
 
 void allocateMemory (acfStruct *acfStructure)
 {
-	int ns = acfStructure->ns;
-	int nf = acfStructure->nf;
+	double bw, f0, tint, t0;
+	int nchn, nsubint;
+
+	bw = acfStructure->bw;
+	f0 = acfStructure->f0;
+	tint = acfStructure->tint;
+	t0 = acfStructure->t0;
+
+	nchn = acfStructure->nchn;
+	nsubint = acfStructure->nsubint;
+
+	double steps = (tint/t0)/nsubint;
+	double stepf = (bw/f0)/nchn;
+	//printf ("%lf\n", steps);
+	//printf ("%lf\n", stepf);
+	int ns = (int)(30/steps)+1;
+	int nf = (int)(30/stepf)+1;
+	//printf ("%d\n", ns);
+	//printf ("%d\n", nf);
+
+	acfStructure->ns = ns;
+	acfStructure->nf = nf;
+	acfStructure->steps = steps;
+	acfStructure->stepf = stepf;
 	
 	acfStructure->s = (double *)malloc(sizeof(double)*ns);
 	acfStructure->f = (double *)malloc(sizeof(double)*nf);
@@ -305,11 +339,15 @@ int simDynSpec (acfStruct *acfStructure)
 {
 	int nf = acfStructure->nf;
 	int ns = acfStructure->ns;
+	int nchn = acfStructure->nchn;
+	int nsubint = acfStructure->nsubint;
+
 	long seed;
 	
 	int i;
 	int j;
 	seed = TKsetSeed();
+	//printf ("seed %ld\n",seed);
 
 	//for (i = 0; i < (2*nf-2)*(2*ns-2); i++)
 	for (i = 0; i < nf*ns; i++)
@@ -324,8 +362,14 @@ int simDynSpec (acfStruct *acfStructure)
 	/////////////////////////////////////////////////////////////////////////////////
 	//printf ("intializing ifft...\n");
 	acfStruct acfTest; // initialize the system, don't know why....
-	acfTest.ns = acfStructure->ns;
-	acfTest.nf = acfStructure->nf;
+
+	acfTest.bw = acfStructure->bw;
+	acfTest.f0 = acfStructure->f0;
+	acfTest.tint = acfStructure->tint;
+	acfTest.t0 = acfStructure->t0;
+
+	acfTest.nchn = acfStructure->nchn;
+	acfTest.nsubint = acfStructure->nsubint;
 
 	allocateMemory (&acfTest);
 	//for (i = 0; i < (2*nf-2)*(2*ns-2); i++)
@@ -350,8 +394,10 @@ int simDynSpec (acfStruct *acfStructure)
 	// ifft
 	idft2d (acfStructure);
 
-	int n;
-	n = 0;
+	// form the matrix and normalize
+	int n = 0;
+	double sum = 0.0;
+
 	for (i = 0; i < nf; i++)
 	//for (i = 0; i < (2*nf-2); i++)
 	{
@@ -361,11 +407,32 @@ int simDynSpec (acfStruct *acfStructure)
 			acfStructure->dynSpec[i][j] = pow(acfStructure->intensity[n][1]/(nf*ns),2.0)+pow(acfStructure->intensity[n][0]/(nf*ns),2.0);
 			//acfStructure->dynSpec[i][j] = pow(acfStructure->intensity[n][1]/((2*nf-2)*(2*ns-2)),2.0)+pow(acfStructure->intensity[n][0]/((2*nf-2)*(2*ns-2)),2.0);
 			//printf ("%lf  ", acfStructure->intensity[n][0]/((2*nf-2)*(2*ns-2)));
-			//printf ("%lf  ", acfStructure->dynSpec[i][j]);
-			fprintf (fp, "%lf  ", acfStructure->dynSpec[i][j]);
+			//fprintf (fp, "%lf  ", acfStructure->dynSpec[i][j]);
+			sum += pow(acfStructure->intensity[n][1]/(nf*ns),2.0)+pow(acfStructure->intensity[n][0]/(nf*ns),2.0);
 			n++;
 		}
-		//printf ("\n");
+		//fprintf (fp, "\n");
+	}
+
+	sum = sum/n;
+	printf ("Normalization %.10lf\n",sum);
+
+	// choose a subwindow
+	double rand, rand2;
+	seed = TKsetSeed();
+	//printf ("seed %ld\n",seed);
+	rand = TKgaussDev(&seed);
+	rand2 = rand - floor(rand);
+
+	int nf0 = (int)(rand2*(nf-nchn));
+	int ns0 = (int)(rand2*(ns-nsubint));
+	
+	for (i = nf0; i < nf0+nchn; i++)
+	{
+		for (j = ns0; j < ns0+nsubint; j++)
+		{
+			fprintf (fp, "%.10lf  ", acfStructure->dynSpec[i][j]/sum);
+		}
 		fprintf (fp, "\n");
 	}
 

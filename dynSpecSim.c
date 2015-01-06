@@ -19,62 +19,41 @@
 
 int main (int argc, char *argv[])
 {
-	/*
-	int index, n;
-	for (i=0;i<argc;i++)
+	int i;
+	double bw, f0;
+	double tint, t0;
+	for (i = 0; i < argc; i++)
 	{
 		if (strcmp(argv[i],"-f") == 0)
 		{
-            index = i + 1;
-			n = 0;
-			while ( (index + n) < argc && strcmp(argv[index+n],"-std") != 0 && strcmp(argv[index+n],"-pt") != 0 && strcmp(argv[index+n],"-o") != 0 && strcmp(argv[index+n],"-single") != 0)
-			{
-				n++;
-		    }
+			bw = atof(argv[++i]);
+			f0 = atof(argv[++i]);
+			//printf ("Observing bandwidth: %lf (MHz)\n", bw);
+			//printf ("Scintillation bandwidth: %lf (MHz)\n", f0);
 			//strcpy(fname,argv[++i]);
 		}
-		else if (strcmp(argv[i],"-std")==0)
+		else if (strcmp(argv[i],"-t")==0)
 		{
-			strcpy(tname,argv[++i]);
-			mode = 0; // standard template format
-			printf ("standard template format\n");
-			//sscanf(argv[++i],"%d",&nbin);
-		}
-		else if (strcmp(argv[i],"-pt")==0)
-		{
-			strcpy(tname,argv[++i]);
-			mode = 1; // ptime template
-			printf ("ptime template format\n");
-		}
-		else if (strcmp(argv[i],"-o")==0)
-		{
-			strcpy(oname,argv[++i]);
-		}
-		else if (strcmp(argv[i],"-single")==0)
-		{
-			tmode = 0; // do freq-dependent matching, and get one TOA
-		}
-		else if (strcmp(argv[i],"-multi")==0)
-		{
-			tmode = 1; // do freq-dependent matching, and get TOA for each channel
-		}
-		else if (strcmp(argv[i],"-fitDM")==0)
-		{
-			fitDM = 1; // do freq-dependent matching, and get TOA for each channel
+			tint = atof(argv[++i]);
+			t0 = atof(argv[++i]);
+			//printf ("Integration time: %lf (s)\n", tint);
+			//printf ("Scintillation time-scale: %lf (s)\n", t0);
 		}
 	}
-	*/
 
-	double step = atof(argv[1]);  // sampling
-	int ns = (int)(20/step)+1;
-	int nf = (int)(16/step)+1;
 	acfStruct acfStructure;
 
-	acfStructure.ns = ns;
-	acfStructure.nf = nf;
+	acfStructure.bw = bw;
+	acfStructure.f0 = f0;
+	acfStructure.tint = tint;
+	acfStructure.t0 = t0;
+
+	acfStructure.nchn = 1024;
+	acfStructure.nsubint = 64;
+
 	allocateMemory (&acfStructure);
 
-	calACF (&acfStructure, step);
+	calACF (&acfStructure);
 	power (&acfStructure);
 	simDynSpec (&acfStructure);
 
