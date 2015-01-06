@@ -8,6 +8,7 @@
 //#include "fitsio.h"
 
 typedef struct acfStruct {
+	double phaseGradient;
 	double bw; // observing bandwidth
 	double f0; // scintillation bandwidth
 	double tint; // integration time
@@ -16,6 +17,7 @@ typedef struct acfStruct {
 	int nsubint;
 	int ns; // sampling number of spatial scale 
 	int nf; // sampling number of frequency scale
+	double size[2]; // sampling boundary
 	double steps;
 	double stepf;
 	double *s; // spatial scale
@@ -34,3 +36,7 @@ int power (acfStruct *acfStructure);
 void deallocateMemory (acfStruct *acfStructure);
 void allocateMemory (acfStruct *acfStructure);
 int simDynSpec (acfStruct *acfStructure);
+int windowSize (acfStruct *acfStructure, double *size);
+int calSize (acfStruct *acfStructure, double *size, double *ratio);
+double find_peak_value (int n, double *s);
+void preAllocateMemory (acfStruct *acfStructure);

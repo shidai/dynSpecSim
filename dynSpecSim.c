@@ -51,6 +51,7 @@ int main (int argc, char *argv[])
 	acfStructure.nchn = 1024;
 	acfStructure.nsubint = 64;
 
+	preAllocateMemory (&acfStructure);
 	allocateMemory (&acfStructure);
 
 	calACF (&acfStructure);
