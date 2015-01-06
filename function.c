@@ -22,13 +22,13 @@ int calACF (acfStruct *acfStructure)
 	for (i = 0; i < ns; i++)
 	{
 		//acfStructure->s[i] = i*step;
-		acfStructure->s[i] = -10.0+i*steps;
+		acfStructure->s[i] = -15.0+i*steps;
 	}
 
   for (i = 0; i < nf; i++)
 	{
 		//acfStructure->f[i] = i*step;
-		acfStructure->f[i] = -10.0+i*stepf;
+		acfStructure->f[i] = -15.0+i*stepf;
 	}
 
 	long seed;
