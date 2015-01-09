@@ -368,13 +368,6 @@ int simDynSpec (acfStruct *acfStructure)
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	FILE *fp;
-	if ((fp = fopen("test.dat", "w+")) == NULL)
-	{
-	  fprintf (stdout, "Can't open file\n");
-	  exit(1);
-	}
-
 	// ifft
 	idft2d (acfStructure);
 
@@ -401,6 +394,13 @@ int simDynSpec (acfStruct *acfStructure)
 	sum = sum/n;
 	//printf ("Normalization %.10lf\n",sum);
 
+	//FILE *fp;
+	//if ((fp = fopen("test.dat", "w+")) == NULL)
+	//{
+	//  fprintf (stdout, "Can't open file\n");
+	//  exit(1);
+	//}
+
 	// choose a subwindow
 	double rand, rand2;
 	//seed = TKsetSeed();
@@ -410,18 +410,23 @@ int simDynSpec (acfStruct *acfStructure)
 
 	int nf0 = (int)(rand2*(nf-nchn));
 	int ns0 = (int)(rand2*(ns-nsubint));
+	float plotUse[nchn*nsubint];
 	
 	for (i = nf0; i < nf0+nchn; i++)
 	{
 		for (j = ns0; j < ns0+nsubint; j++)
 		{
-			fprintf (fp, "%.10lf  ", acfStructure->dynSpec[i][j]/sum);
+			//printf ("%.10lf\n", acfStructure->dynSpec[i][j]/sum);
+			plotUse[(i-nf0)*nsubint+(j-ns0)] = (float)(acfStructure->dynSpec[i][j]/sum);
+			//fprintf (fp, "%.10lf  ", acfStructure->dynSpec[i][j]/sum);
 		}
-		fprintf (fp, "\n");
+		//fprintf (fp, "\n");
 	}
 
-	if (fclose (fp) != 0)
-		fprintf (stderr, "Error closing\n");
+	heatMap (plotUse, nsubint, nchn);
+
+	//if (fclose (fp) != 0)
+	//	fprintf (stderr, "Error closing\n");
 
 	return 0;
 }

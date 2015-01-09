@@ -40,3 +40,6 @@ int windowSize (acfStruct *acfStructure, double *size);
 int calSize (acfStruct *acfStructure, double *size, double *ratio);
 double find_peak_value (int n, double *s);
 void preAllocateMemory (acfStruct *acfStructure);
+
+void palett(int TYPE, float CONTRA, float BRIGHT);
+void heatMap (float *tab, int dimx, int dimy);
