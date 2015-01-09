@@ -33,7 +33,7 @@ int calACF (acfStruct *acfStructure)
 
 	double rand;
 	rand = acfStructure->phaseGradient;
-	printf ("%lf\n",rand);
+	//printf ("%lf\n",rand);
 
 	int n = 0;
 	for (i = 0; i < nf; i++)
@@ -53,7 +53,7 @@ int calACF (acfStruct *acfStructure)
 	//{
 	//	for (j = 0; j < ns; j++)
 	//	{
-	//		printf ("%lf  ", acf[n]);
+	//		printf ("%.10lf  ", acf[n]);
 	//		n++;
 	//	}
 	//	printf ("\n");
@@ -147,39 +147,57 @@ int calACF (acfStruct *acfStructure)
 
 int dft2d (acfStruct *acfStructure, fftw_complex *out)
 {
+	int i;
 	int n0 = acfStructure->nf;
 	int n1 = acfStructure->ns;
 	//int n0 = 2*acfStructure->nf-2;
 	//int n1 = 2*acfStructure->ns-2;
 	double *in;
-
-	in = acfStructure->acf2d;
+	in = (double *)malloc(sizeof(double)*n0*n1);
 
 	fftw_plan p;
 	
-	p = fftw_plan_dft_r2c_2d (n0, n1, in, out, FFTW_MEASURE);
+	p = fftw_plan_dft_r2c_2d (n0, n1, in, out, FFTW_ESTIMATE);
+	//p = fftw_plan_dft_r2c_2d (n0, n1, in, out, FFTW_MEASURE);
+
+	for (i = 0; i < n0*n1; i++)
+	{
+		in[i] = acfStructure->acf2d[i];
+	}
 
 	fftw_execute(p);
 
 	fftw_destroy_plan(p);
+	free (in);
   
 	return 0;
 }
 
 int idft2d (acfStruct *acfStructure)
 {
+	int i;
 	int n0 = acfStructure->nf;
 	int n1 = acfStructure->ns;
 	//int n0 = 2*acfStructure->nf-2;
 	//int n1 = 2*acfStructure->ns-2;
+	fftw_complex *in;
+	in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*n0*n1);
 
 	fftw_plan p;
 	
-	p = fftw_plan_dft_2d (n0, n1, acfStructure->eField, acfStructure->intensity, FFTW_BACKWARD, FFTW_MEASURE);
+	p = fftw_plan_dft_2d (n0, n1, in, acfStructure->intensity, FFTW_BACKWARD, FFTW_ESTIMATE);
+	//p = fftw_plan_dft_2d (n0, n1, in, acfStructure->intensity, FFTW_BACKWARD, FFTW_MEASURE);
+
+	for (i = 0; i < n0*n1; i++)
+	{
+		in[i][0] = acfStructure->eField[i][0];
+		in[i][1] = acfStructure->eField[i][1];
+	}
 
 	fftw_execute(p);
 
 	fftw_destroy_plan(p);
+	fftw_free (in);
   
 	return 0;
 }
@@ -190,30 +208,6 @@ int power (acfStruct *acfStructure)
 	int nf = acfStructure->nf;
 	int ns = acfStructure->ns;
 	/////////////////////////////////////////////////////////////////////////////////
-	//printf ("intializing fft...\n");
-	acfStruct acfTest; // initialize the system, don't know why....
-	
-	acfTest.ns = acfStructure->ns;
-	acfTest.nf = acfStructure->nf;
-
-	allocateMemory (&acfTest);
-
-	for (i = 0; i < acfTest.nf*acfTest.ns; i++)
-	//for (i = 0; i < (2*nf-2)*(2*ns-2); i++)
-	{
-		//printf ("acf2d %lf\n",acfStructure->acf2d[i]);
-		//acfTest.acf2d[i] = acfStructure->acf2d[i];
-		acfTest.acf2d[i] = i;
-	}
-
-	fftw_complex *out_t;
-	out_t = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*acfTest.nf*((int)(acfTest.ns/2)+1));
-	//out_t = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (2*nf-2)*ns);
-	dft2d (&acfTest, out_t);
-
-	deallocateMemory (&acfTest);
-	//printf ("finish intializing fft...\n");
-	//////////////////////////////////////////////////////////////////////////////
 
   fftw_complex *out;
 	
@@ -253,7 +247,6 @@ int power (acfStruct *acfStructure)
 	}
 
 	fftw_free(out); 
-	fftw_free(out_t); 
 
 	return 0;
 }
@@ -261,10 +254,12 @@ int power (acfStruct *acfStructure)
 void preAllocateMemory (acfStruct *acfStructure)
 {
 	long seed;
-	//seed = -1417748812;
+	//seed = -1420603014;
 	seed = TKsetSeed();
 	//printf ("%ld\n",seed);
+	//acfStructure->phaseGradient = -0.62;
 	acfStructure->phaseGradient = TKgaussDev(&seed);
+	printf ("Phase gradient: %lf\n", acfStructure->phaseGradient);
 
 	double bw, f0, tint, t0;
 	int nchn, nsubint;
@@ -279,15 +274,15 @@ void preAllocateMemory (acfStruct *acfStructure)
 
 	double steps = (tint/t0)/nsubint;
 	double stepf = (bw/f0)/nchn;
+	//double steps = 0.2;
+	//double stepf = 0.2;
 	acfStructure->steps = steps;
 	acfStructure->stepf = stepf;
-	//printf ("%lf\n", steps);
-	//printf ("%lf\n", stepf);
 	
 	double size[2]; // sampling boundary
 	windowSize (acfStructure, size);
-	printf ("f0 size: %lf\n", size[0]);
-	printf ("s0 size: %lf\n", size[1]);
+	//printf ("f0 size: %.10lf\n", size[0]);
+	//printf ("s0 size: %.10lf\n", size[1]);
 
 	int nf = (int)(size[0]*2/stepf)+1;
 	int ns = (int)(size[1]*2/steps)+1;
@@ -372,33 +367,13 @@ int simDynSpec (acfStruct *acfStructure)
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
-	//printf ("intializing ifft...\n");
-	acfStruct acfTest; // initialize the system, don't know why....
 
-	acfTest.ns = acfStructure->ns;
-	acfTest.nf = acfStructure->nf;
-
-	allocateMemory (&acfTest);
-	//for (i = 0; i < (2*nf-2)*(2*ns-2); i++)
-	for (i = 0; i < acfTest.nf*acfTest.ns; i++)
+	FILE *fp;
+	if ((fp = fopen("test.dat", "w+")) == NULL)
 	{
-		acfTest.eField[i][0] = i;
-		acfTest.eField[i][1] = i;
-		//acfTest.eField[i][0] = acfStructure->eField[i][0];
-		//acfTest.eField[i][1] = acfStructure->eField[i][0];
+	  fprintf (stdout, "Can't open file\n");
+	  exit(1);
 	}
-
-	idft2d (&acfTest);
-
-	deallocateMemory (&acfTest);
-	//////////////////////////////////////////////////////////////////////////////
-
-	 FILE *fp;
-	 if ((fp = fopen("test.dat", "w+")) == NULL)
-	 {
-		 fprintf (stdout, "Can't open file\n");
-		 exit(1);
-	 }
 
 	// ifft
 	idft2d (acfStructure);
@@ -424,11 +399,11 @@ int simDynSpec (acfStruct *acfStructure)
 	}
 
 	sum = sum/n;
-	printf ("Normalization %.10lf\n",sum);
+	//printf ("Normalization %.10lf\n",sum);
 
 	// choose a subwindow
 	double rand, rand2;
-	seed = TKsetSeed();
+	//seed = TKsetSeed();
 	//printf ("seed %ld\n",seed);
 	rand = TKgaussDev(&seed);
 	rand2 = rand - floor(rand);
@@ -453,43 +428,46 @@ int simDynSpec (acfStruct *acfStructure)
 
 int windowSize (acfStruct *acfStructure, double *size)
 {
-	double bw, f0, tint, t0;
-	bw = acfStructure->bw;
-	f0 = acfStructure->f0;
-	tint = acfStructure->tint;
-	t0 = acfStructure->t0;
+	//double bw, f0, tint, t0;
+	//bw = acfStructure->bw;
+	//f0 = acfStructure->f0;
+	//tint = acfStructure->tint;
+	//t0 = acfStructure->t0;
 
-	if ( (bw/f0) > 6 )
-	{
-		size[0] = bw/f0;
-	}
-	else
-	{
-		size[0] = 6.0;
-	}
-			  
-	if ( (tint/t0) > 6 )
-	{
-		size[1] = tint/t0;
-	}
-	else
-	{
-		size[1] = 6.0;
-	}
+	//if ( (bw/f0) > 6 )
+	//{
+	//	size[0] = bw/f0;
+	//}
+	//else
+	//{
+	//	size[0] = 6.0;
+	//}
+	//		  
+	//if ( (tint/t0) > 6 )
+	//{
+	//	size[1] = tint/t0;
+	//}
+	//else
+	//{
+	//	size[1] = 6.0;
+	//}
 
-	double ratio[2];
-	calSize (acfStructure, size, ratio);
-	//printf ("f0 ratio: %lf\n", ratio[0]);
-	//printf ("s0 ratio: %lf\n", ratio[1]);
+	size[0] = 20.0;
+	size[1] = 20.0;
 
-	while (ratio[0] >= 0.001 || ratio[1] >= 0.001)
-	{
-		size[0] = size[0] + 0.05*size[0];
-		size[1] = size[1] + 0.05*size[1];
-		calSize (acfStructure, size, ratio);
-		//printf ("f0 ratio: %lf\n", ratio[0]);
-		//printf ("s0 ratio: %lf\n", ratio[1]);
-	}
+	//double ratio[2];
+	//calSize (acfStructure, size, ratio);
+	////printf ("f0 ratio: %lf\n", ratio[0]);
+	////printf ("s0 ratio: %lf\n", ratio[1]);
+
+	//while (ratio[0] >= 1e-7 || ratio[1] >= 1e-7)
+	//{
+	//	size[0] = 1.05*size[0];
+	//	size[1] = 1.05*size[1];
+	//	calSize (acfStructure, size, ratio);
+	//	//printf ("f0 ratio: %lf\n", ratio[0]);
+	//	//printf ("s0 ratio: %lf\n", ratio[1]);
+	//}
 
 	acfStructure->size[0] = size[0];
 	acfStructure->size[1] = size[1];
@@ -509,7 +487,7 @@ int calSize (acfStruct *acfStructure, double *size, double *ratio)
 
 	double s[ns], acfs[ns], smax;
 	double f[nf], acff[nf], fmax;
-	double c; // value at the center
+	//double c; // value at the center
 
 	for (i = 0; i < ns; i++)
 	{
@@ -521,7 +499,7 @@ int calSize (acfStruct *acfStructure, double *size, double *ratio)
 		f[i] = -size[0]+i*stepf;
 	}
 
-	c = exp(-pow((pow(fabs(s[(int)(ns/2)]+2.0*rand*0.4*f[(int)(nf/2)]),2.5)+pow(fabs(f[(int)(nf/2)]),1.5)),2.0/3.0));
+	//c = exp(-pow((pow(fabs(s[(int)(ns/2)]+2.0*rand*0.4*f[(int)(nf/2)]),2.5)+pow(fabs(f[(int)(nf/2)]),1.5)),2.0/3.0));
 
 	for (i = 0; i < nf; i++)
 	{
@@ -536,8 +514,11 @@ int calSize (acfStruct *acfStructure, double *size, double *ratio)
 	smax = find_peak_value (ns, acfs);
 	fmax = find_peak_value (nf, acff);
 
-	ratio[0] = fmax/c;
-	ratio[1] = smax/c;
+	ratio[0] = fmax;
+	ratio[1] = smax;
+	//ratio[0] = fmax/c;
+	//ratio[1] = smax/c;
+	printf ("%lf %lf \n", ratio[0], ratio[1]);
 
 	return 0;
 }
@@ -567,4 +548,4 @@ double find_peak_value (int n, double *s)
 	
 	return temp[n-1];
 }
-															
+

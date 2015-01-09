@@ -26,6 +26,6 @@ ax.set_ylim(0,n1)
 #ax.pcolor(data)
 ax.pcolor(data, cmap='YlOrBr')
 #plt.minorticks_on()
-plt.savefig("dynSpec.png",dpi=80)
+#plt.savefig("dynSpec.png",dpi=80)
 
 plt.show()
