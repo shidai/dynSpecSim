@@ -46,7 +46,7 @@ void heatMap (float *tab, int dimx, int dimy)
 	cpgsvp(0.1,0.9,0.1,0.9);
 	//cpgswin(0.05,0.95,0.05,0.95);
   cpglab("Subintegration","Frequency (MHz)","Dynamic spectrum");
-	palett(3, -1.0, 0.5);
+	palett(2, -0.5, 0.5);
   cpgimag(tab,dimx,dimy,1,dimx,1,dimy,zmin,zmax,tr);
 
   cpgend();

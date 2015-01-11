@@ -90,30 +90,29 @@ int calACF (acfStruct *acfStructure)
 	//}
 	//////////////////////////////////////////////////////////////////
 
-	n = 0;
 	for (i = 0; i < nf; i++)
 	{
 		for (j = 0; j < ns; j++)
 		{
-			if (i > (int)(nf/2) && j > (int)(ns/2))
+			if (i >= (int)ceil(nf/2.0) && j >= (int)ceil(ns/2.0))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)(nf/2)-1)+(j-(int)(ns/2)-1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)ceil(nf/2.0))+(j-(int)ceil(ns/2.0))];
 			}
-			else if  (i > (int)(nf/2) && j <= (int)(ns/2))
+			else if  (i >= (int)ceil(nf/2.0) && j < (int)ceil(ns/2.0))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)(nf/2)-1)+(j+(int)(ns/2))];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i-(int)ceil(nf/2.0))+(j+(int)floor(ns/2.0))];
 			}
-			else if  (i <= (int)(nf/2) && j <= (int)(ns/2))
+			else if  (i < (int)ceil(nf/2.0) && j < (int)ceil(ns/2.0))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)(nf/2))+(j+(int)(ns/2))];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)floor(nf/2.0))+(j+(int)floor(ns/2.0))];
 			}
-			else if  (i <= (int)(nf/2) && j > (int)(ns/2))
+			else if  (i < (int)ceil(nf/2.0) && j >= (int)ceil(ns/2.0))
 			{
-				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)(nf/2))+(j-(int)(ns/2)-1)];
+				acfStructure->acf2d[i*ns+j] = acf[ns*(i+(int)floor(nf/2.0))+(j-(int)ceil(ns/2.0))];
 			}
-			n++;
 		}
 	}
+
 
 	//n = 0;
 	//for (i = 0; i < nf; i++)
@@ -237,8 +236,15 @@ int power (acfStruct *acfStructure)
 			}
 			else
 			{
-				acfStructure->psrt[n] = sqrt(sqrt(pow(out[i*((int)(ns/2)+1)+ns-j][0],2.0)+pow(out[i*((int)(ns/2)+1)+ns-j][1],2.0)));
+				if (i == 0)
+				{
+					acfStructure->psrt[n] = sqrt(sqrt(pow(out[i*((int)(ns/2)+1)+ns-j][0],2.0)+pow(out[i*((int)(ns/2)+1)+ns-j][1],2.0)));
 				//acfStructure->psrt[n] = sqrt(fabs(out[i*((int)(ns/2)+1)+ns-j][0]));
+				}
+				else
+				{
+					acfStructure->psrt[n] = sqrt(sqrt(pow(out[(nf-i)*((int)(ns/2)+1)+ns-j][0],2.0)+pow(out[(nf-i)*((int)(ns/2)+1)+ns-j][1],2.0)));
+				}
 			}
 			//printf ("%lf ", acfStructure->psrt[n]);
 			n++;
@@ -433,46 +439,46 @@ int simDynSpec (acfStruct *acfStructure)
 
 int windowSize (acfStruct *acfStructure, double *size)
 {
-	//double bw, f0, tint, t0;
-	//bw = acfStructure->bw;
-	//f0 = acfStructure->f0;
-	//tint = acfStructure->tint;
-	//t0 = acfStructure->t0;
+	double bw, f0, tint, t0;
+	bw = acfStructure->bw;
+	f0 = acfStructure->f0;
+	tint = acfStructure->tint;
+	t0 = acfStructure->t0;
 
-	//if ( (bw/f0) > 6 )
-	//{
-	//	size[0] = bw/f0;
-	//}
-	//else
-	//{
-	//	size[0] = 6.0;
-	//}
-	//		  
-	//if ( (tint/t0) > 6 )
-	//{
-	//	size[1] = tint/t0;
-	//}
-	//else
-	//{
-	//	size[1] = 6.0;
-	//}
+	if ( (bw/f0) > 6 )
+	{
+		size[0] = bw/f0;
+	}
+	else
+	{
+		size[0] = 6.0;
+	}
+			  
+	if ( (tint/t0) > 6 )
+	{
+		size[1] = tint/t0;
+	}
+	else
+	{
+		size[1] = 6.0;
+	}
 
-	size[0] = 20.0;
-	size[1] = 20.0;
+	//size[0] = 20.0;
+	//size[1] = 20.0;
 
-	//double ratio[2];
-	//calSize (acfStructure, size, ratio);
-	////printf ("f0 ratio: %lf\n", ratio[0]);
-	////printf ("s0 ratio: %lf\n", ratio[1]);
+	double ratio[2];
+	calSize (acfStructure, size, ratio);
+	//printf ("f0 ratio: %lf\n", ratio[0]);
+	//printf ("s0 ratio: %lf\n", ratio[1]);
 
-	//while (ratio[0] >= 1e-7 || ratio[1] >= 1e-7)
-	//{
-	//	size[0] = 1.05*size[0];
-	//	size[1] = 1.05*size[1];
-	//	calSize (acfStructure, size, ratio);
-	//	//printf ("f0 ratio: %lf\n", ratio[0]);
-	//	//printf ("s0 ratio: %lf\n", ratio[1]);
-	//}
+	while (ratio[0] >= 1e-6 || ratio[1] >= 1e-6)
+	{
+		size[0] = 1.05*size[0];
+		size[1] = 1.05*size[1];
+		calSize (acfStructure, size, ratio);
+		//printf ("f0 ratio: %lf\n", ratio[0]);
+		//printf ("s0 ratio: %lf\n", ratio[1]);
+	}
 
 	acfStructure->size[0] = size[0];
 	acfStructure->size[1] = size[1];
@@ -523,7 +529,7 @@ int calSize (acfStruct *acfStructure, double *size, double *ratio)
 	ratio[1] = smax;
 	//ratio[0] = fmax/c;
 	//ratio[1] = smax/c;
-	printf ("%lf %lf \n", ratio[0], ratio[1]);
+	//printf ("%lf %lf \n", ratio[0], ratio[1]);
 
 	return 0;
 }
