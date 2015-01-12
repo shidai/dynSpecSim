@@ -429,7 +429,7 @@ int simDynSpec (acfStruct *acfStructure)
 		//fprintf (fp, "\n");
 	}
 
-	heatMap (plotUse, nsubint, nchn);
+	heatMap (plotUse, acfStructure);
 
 	//if (fclose (fp) != 0)
 	//	fprintf (stderr, "Error closing\n");

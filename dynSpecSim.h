@@ -42,4 +42,4 @@ double find_peak_value (int n, double *s);
 void preAllocateMemory (acfStruct *acfStructure);
 
 void palett(int TYPE, float CONTRA, float BRIGHT);
-void heatMap (float *tab, int dimx, int dimy);
+void heatMap (float *tab, acfStruct *acfStructure);

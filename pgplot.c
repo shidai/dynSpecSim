@@ -8,46 +8,59 @@
 //#define MIN(a,b) ( (a)<(b) ? (a) : (b))
 
 
-void heatMap (float *tab, int dimx, int dimy)
+void heatMap (float *tab, acfStruct *acfStructure)
 {
   //int i,j;                     
   //int dimx = acfStructure.ns;
 	//int dimy = acfStructure.nf; // dimensions 
   //float tab[dimx*dimy];       // value
-  float xmin,xmax;            /* intervalle. en x */
-  float ymin,ymax;            /* intervalle. en y */
   float zmin,zmax;            /* min et max des valeurs de la fonction */
   float tr[6];                /* matrice utilisee par pgimag */
 
-  xmin=-dimx/2; xmax=dimx/2;
-  ymin=-dimy/2; ymax=dimy/2;
+	int dimx = acfStructure->nsubint;
+	int dimy = acfStructure->nchn;
+	double bw = acfStructure->bw;
   zmin=0; zmax=1;
 
-  /* Matrice de passage pixels -> coordonnees user
-     --------------------------------------------- */
+	double f1 = 1241; // MHz
+	double f2 = 1497; // MHz
+	/*The transformation matrix TR is used to calculate the world
+	coordinates of the center of the "cell" that represents each
+	array element. The world coordinates of the center of the cell
+	corresponding to array element A(I,J) are given by:
+	X = TR(1) + TR(2)*I + TR(3)*J
+	Y = TR(4) + TR(5)*I + TR(6)*J
+	Usually TR(3) and TR(5) are zero -- unless the coordinate
+	transformation involves a rotation or shear.  The corners of the
+	quadrilateral region that is shaded by PGIMAG are given by
+	applying this transformation to (I1-0.5,J1-0.5), (I2+0.5, J2+0.5).*/
   //tr[0]=0;
-  //tr[1]=1;
+  //tr[1]=(float)(dimy)/dimx;
   //tr[2]=0;
   //tr[3]=0;
   //tr[4]=0;
   //tr[5]=1;
-  tr[0]=xmin;
-  tr[1]=(xmax-xmin)/dimx;
+  tr[0]=-0.5;
+  tr[1]=1;
   tr[2]=0;
-  tr[3]=ymin;
+  tr[3]=f2;
   tr[4]=0;
-  tr[5]=(ymax-ymin)/dimy;
+  tr[5]=-bw/dimy;
  
 	// plot 
-  cpgbeg(0,"/xs",1,1);
-  //cpgsch(1.5);
-  //cpgenv(0,dimy,0,dimy,1,0);        
-  cpgenv(xmin,xmax,ymin,ymax,1,0);        
-	cpgsvp(0.1,0.9,0.1,0.9);
-	//cpgswin(0.05,0.95,0.05,0.95);
-  cpglab("Subintegration","Frequency (MHz)","Dynamic spectrum");
-	palett(2, -0.5, 0.5);
-  cpgimag(tab,dimx,dimy,1,dimx,1,dimy,zmin,zmax,tr);
+  //cpgbeg(0,"?",1,1);
+  cpgbeg(0,"2/xs",1,1);
+  cpgsch(1.2); // set character height
+  cpgscf(2); // set character font
+	cpgswin(0,dimx,f2,f1); // set window
+	//cpgsvp(0.1,0.9,0.1,0.9); // set viewport
+  //cpgenv(1,dimx,f1,f2,0,0); // set window and viewport and draw labeled frame
+	cpgbox("BCTSIN",10,5,"BCTSIN",50,5);
+  cpglab("Subintegration","Frequency (MHz)","Freq: 1369.0 MHz BW: -256.000 Length: 3840.0 S/N: 1000.0");
+	//cpgtick(0,0,1024,0,1.0/64,0.1,0.2,0,0,"1");
+	//palett(3, -0.4, 0.3);
+  //cpgimag(tab,dimx,dimy,1,dimx,1,dimy,zmin,zmax,tr);
+  cpggray(tab,dimx,dimy,1,dimx,1,dimy,zmin,zmax,tr);
 
   cpgend();
 } 
