@@ -48,16 +48,25 @@ int calACF (acfStruct *acfStructure)
 		}
 	}
 
-	//n = 0;
-	//for (i = 0; i < nf; i++)
-	//{
-	//	for (j = 0; j < ns; j++)
-	//	{
-	//		printf ("%.10lf  ", acf[n]);
-	//		n++;
-	//	}
-	//	printf ("\n");
-	//}
+	FILE *fp;
+	if ((fp = fopen("acf.dat", "w+")) == NULL)
+	{
+	  fprintf (stdout, "Can't open file\n");
+	  exit(1);
+	}
+
+	for (i = 0; i < nf; i++)
+	{
+		for (j = 0; j < ns; j++)
+		{
+			fprintf (fp, "%.10lf  ", acf[i*ns+j]);
+			n++;
+		}
+		fprintf (fp, "\n");
+	}
+
+	if (fclose (fp) != 0)
+		fprintf (stderr, "Error closing\n");
 
 	//////////////////////////////////////////////////////////////////
 	//n = 0;
@@ -400,12 +409,12 @@ int simDynSpec (acfStruct *acfStructure)
 	sum = sum/n;
 	//printf ("Normalization %.10lf\n",sum);
 
-	//FILE *fp;
-	//if ((fp = fopen("test.dat", "w+")) == NULL)
-	//{
-	//  fprintf (stdout, "Can't open file\n");
-	//  exit(1);
-	//}
+	FILE *fp;
+	if ((fp = fopen("dynSpec.dat", "w+")) == NULL)
+	{
+	  fprintf (stdout, "Can't open file\n");
+	  exit(1);
+	}
 
 	// choose a subwindow
 	double rand, rand2;
@@ -424,15 +433,15 @@ int simDynSpec (acfStruct *acfStructure)
 		{
 			//printf ("%.10lf\n", acfStructure->dynSpec[i][j]/sum);
 			plotUse[(i-nf0)*nsubint+(j-ns0)] = (float)(acfStructure->dynSpec[i][j]/sum);
-			//fprintf (fp, "%.10lf  ", acfStructure->dynSpec[i][j]/sum);
+			fprintf (fp, "%.10lf  ", acfStructure->dynSpec[i][j]/sum);
 		}
-		//fprintf (fp, "\n");
+		fprintf (fp, "\n");
 	}
 
 	heatMap (plotUse, acfStructure);
 
-	//if (fclose (fp) != 0)
-	//	fprintf (stderr, "Error closing\n");
+	if (fclose (fp) != 0)
+		fprintf (stderr, "Error closing\n");
 
 	return 0;
 }
